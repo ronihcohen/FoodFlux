@@ -41,7 +41,7 @@ A modern, full-stack calorie tracking application built with Next.js 14, TypeScr
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/ronihcohen/FoodFlux.git
    cd FoodFlux/web
    ```
 
@@ -183,7 +183,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 If you encounter any issues or have questions:
-- Check the [Issues](https://github.com/your-repo/issues) page
+- Check the [Issues](https://github.com/ronihcohen/FoodFlux/issues) page
 - Create a new issue with detailed information
 - Contact the development team
 
