@@ -34,6 +34,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
               <span className="section-title">Day</span>
               <nav className="flex items-center gap-3 text-sm">
                 <Link href={`/?date=${prev}`} className="badge">Prev</Link>
+                <Link href={`/?date=${todayKey}`} className="badge">Today</Link>
                 <span className="text-sm font-medium">{dateKey}</span>
                 <Link href={`/?date=${next}`} className="badge">Next</Link>
               </nav>
