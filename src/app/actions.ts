@@ -47,6 +47,11 @@ export async function addEntry(dateKey: string, name: string, calories: number, 
     }
   }
 
+  // If we still don't have a name after trying to use preset, throw a more descriptive error
+  if (!workingName) {
+    throw new Error("Food name is required. Please enter a name or select a preset.");
+  }
+
   const schema = z.object({
     dateKey: z.string().min(8).max(10),
     name: z.string().min(1),

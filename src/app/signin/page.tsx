@@ -15,30 +15,34 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-2xl font-semibold">Sign in</h1>
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-          required
-        />
-        <button type="submit" className="w-full bg-black text-white py-2 rounded">
-          Sign in
-        </button>
-      </form>
+    <div className="container-shell">
+      <div className="max-w-md mx-auto card">
+        <form onSubmit={onSubmit} className="card-body space-y-4">
+          <div>
+            <h1 className="text-xl font-semibold">Welcome back</h1>
+            <p className="text-sm text-neutral-500">Sign in to continue</p>
+          </div>
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input"
+            required
+          />
+          <button type="submit" className="btn-primary w-full">Sign in</button>
+          <p className="text-xs text-neutral-500">Demo: demo@foodflux.dev / demo1234</p>
+        </form>
+      </div>
     </div>
   );
 }

@@ -26,101 +26,130 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
   const diff = (goal?.goalCalories ?? 0) - total;
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">FoodFlux</h1>
-        <nav className="flex items-center gap-3 text-sm">
-          <Link href={`/?date=${prev}`} className="underline">Prev</Link>
-          <span>{dateKey}</span>
-          <Link href={`/?date=${next}`} className="underline">Next</Link>
-        </nav>
-      </header>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="card md:col-span-2">
+          <div className="card-body">
+            <div className="flex items-center justify-between mb-3">
+              <span className="section-title">Day</span>
+              <nav className="flex items-center gap-3 text-sm">
+                <Link href={`/?date=${prev}`} className="badge">Prev</Link>
+                <span className="text-sm font-medium">{dateKey}</span>
+                <Link href={`/?date=${next}`} className="badge">Next</Link>
+              </nav>
+            </div>
 
-      <section className="space-y-2">
-        <h2 className="font-medium">Daily Goal</h2>
-        <form action={async (fd) => {
-          "use server";
-          const calories = Number(fd.get("goal") ?? 0);
-          await upsertGlobalDailyGoal(calories);
-          const { revalidatePath } = await import("next/cache");
-          revalidatePath(`/?date=${dateKey}`);
-        }} className="flex items-center gap-2">
-          <input name="goal" type="number" defaultValue={goal?.goalCalories ?? 0} className="border rounded px-2 py-1 w-32" />
-          <button type="submit" className="px-3 py-1 rounded bg-black text-white">Save</button>
-        </form>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="font-medium">Add Entry</h2>
-        <form action={async (fd) => {
-          "use server";
-          const name = String(fd.get("name") ?? "");
-          const calories = Number(fd.get("calories") ?? 0);
-          const foodItemId = String(fd.get("preset") || "");
-          await addEntry(dateKey, name, calories, foodItemId || undefined);
-        }} className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-          <input name="name" placeholder="Name" className="border rounded px-2 py-1" />
-          <input name="calories" type="number" placeholder="Calories" className="border rounded px-2 py-1" />
-          <select name="preset" className="border rounded px-2 py-1">
-            <option value="">Preset (optional)</option>
-            {presets.map(p => (
-              <option key={p.id} value={p.id}>{p.name} ({p.caloriesPerUnit})</option>
-            ))}
-          </select>
-          <button type="submit" className="px-3 py-1 rounded bg-black text-white">Add</button>
-        </form>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="font-medium">Entries</h2>
-        <ul className="divide-y">
-          {entries.map(e => (
-            <li key={e.id} className="flex items-center justify-between py-2">
-              <div>
-                <p className="font-medium">{e.name}</p>
-                <p className="text-sm text-gray-500">{e.calories} cal</p>
-              </div>
-              <form action={async () => { "use server"; await deleteEntry(e.id); }}>
-                <button className="text-red-600">Delete</button>
+            <section className="space-y-2">
+              <h2 className="font-medium">Daily Goal</h2>
+              <form action={async (fd) => {
+                "use server";
+                const calories = Number(fd.get("goal") ?? 0);
+                await upsertGlobalDailyGoal(calories);
+                const { revalidatePath } = await import("next/cache");
+                revalidatePath(`/?date=${dateKey}`);
+              }} className="flex items-center gap-2">
+                <input name="goal" type="number" defaultValue={goal?.goalCalories ?? 0} className="input w-32" />
+                <button type="submit" className="btn-primary">Save</button>
               </form>
-            </li>
-          ))}
-        </ul>
-      </section>
+            </section>
 
-      <section className="space-y-2">
-        <h2 className="font-medium">Totals</h2>
-        <p>Total: {total} cal</p>
-        <p>Difference vs goal: {diff} cal</p>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="font-medium">Manage Presets</h2>
-        <form action={addFoodItem} className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <input name="name" placeholder="Name" className="border rounded px-2 py-1" />
-          <input name="caloriesPerUnit" type="number" placeholder="Calories" className="border rounded px-2 py-1" />
-          <button type="submit" className="px-3 py-1 rounded bg-black text-white">Add Preset</button>
-        </form>
-        <div className="space-y-2">
-          {presets.map(p => (
-            <div key={p.id} className="flex items-center gap-2 border rounded p-2">
+            <section className="space-y-2 mt-4">
+              <h2 className="font-medium">Add Entry</h2>
               <form action={async (fd) => {
                 "use server";
                 const name = String(fd.get("name") ?? "").trim();
-                const caloriesPerUnit = Number(fd.get("caloriesPerUnit") ?? 0);
-                await updateFoodItem(p.id, name, caloriesPerUnit);
-              }} className="flex items-center gap-2 flex-1">
-                <input name="name" defaultValue={p.name} className="border rounded px-2 py-1 w-40" />
-                <input name="caloriesPerUnit" type="number" defaultValue={p.caloriesPerUnit} className="border rounded px-2 py-1 w-28" />
-                <button type="submit" className="px-3 py-1 rounded bg-black text-white">Save</button>
+                const calories = Number(fd.get("calories") ?? 0);
+                const foodItemId = String(fd.get("preset") || "");
+                
+                // Don't submit if name is empty and no preset is selected
+                if (!name && !foodItemId) {
+                  return; // Silently ignore invalid submission
+                }
+                
+                try {
+                  await addEntry(dateKey, name, calories, foodItemId || undefined);
+                } catch (error) {
+                  // Handle validation errors gracefully
+                  console.error("Failed to add entry:", error);
+                }
+              }} className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <input name="name" placeholder="Food name (or select preset)" className="input" />
+                <input name="calories" type="number" placeholder="Calories" className="input" />
+                <select name="preset" className="select">
+                  <option value="">Select preset (optional)</option>
+                  {presets.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.caloriesPerUnit})</option>
+                  ))}
+                </select>
+                <button type="submit" className="btn-primary">Add</button>
               </form>
-              <form action={async () => { "use server"; await deleteFoodPreset(p.id); }}>
-                <button className="text-red-600">Delete</button>
-              </form>
-            </div>
-          ))}
+            </section>
+
+            <section className="space-y-2 mt-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-medium">Entries</h2>
+                <div className="text-sm text-neutral-500">Total: <span className="font-medium text-neutral-900 dark:text-neutral-100">{total}</span> cal</div>
+              </div>
+              <ul className="divide-y">
+                {entries.map(e => (
+                  <li key={e.id} className="flex items-center justify-between py-2">
+                    <div>
+                      <p className="font-medium">{e.name}</p>
+                      <p className="text-sm text-gray-500">{e.calories} cal</p>
+                    </div>
+                    <form action={async () => { "use server"; await deleteEntry(e.id); }}>
+                      <button className="btn-ghost text-red-600">Delete</button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
         </div>
-      </section>
+
+        <div className="card">
+          <div className="card-body space-y-2">
+            <h2 className="font-medium">Manage Presets</h2>
+            <form action={addFoodItem} className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input name="name" placeholder="Name" className="input" />
+              <input name="caloriesPerUnit" type="number" placeholder="Calories" className="input" />
+              <button type="submit" className="btn-primary">Add Preset</button>
+            </form>
+            <div className="space-y-2">
+              {presets.map(p => (
+                <div key={p.id} className="flex items-center gap-2">
+                  <form action={async (fd) => {
+                    "use server";
+                    const name = String(fd.get("name") ?? "").trim();
+                    const caloriesPerUnit = Number(fd.get("caloriesPerUnit") ?? 0);
+                    await updateFoodItem(p.id, name, caloriesPerUnit);
+                  }} className="flex items-center gap-2 flex-1">
+                    <input name="name" defaultValue={p.name} className="input w-40" />
+                    <input name="caloriesPerUnit" type="number" defaultValue={p.caloriesPerUnit} className="input w-28" />
+                    <button type="submit" className="btn-ghost">Save</button>
+                  </form>
+                  <form action={async () => { "use server"; await deleteFoodPreset(p.id); }}>
+                    <button className="btn-danger">Delete</button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-body flex items-center justify-between">
+          <div>
+            <div className="section-title">Daily Summary</div>
+            <div className="text-sm text-neutral-500">Difference vs goal</div>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-semibold">{total} cal</div>
+            <div className={`text-sm ${diff >= 0 ? "text-emerald-600" : "text-red-600"}`}>{diff} cal</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
