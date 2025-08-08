@@ -8,7 +8,16 @@ export const dynamic = "force-dynamic";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
   const session = await getServerAuthSession();
-  if (!session?.user?.id) redirect("/signin");
+  
+  // Debug logging in development
+  if (process.env.NODE_ENV === "development") {
+    console.log("Session:", session);
+  }
+  
+  if (!session?.user?.id) {
+    console.log("No session or user ID, redirecting to signin");
+    redirect("/signin");
+  }
 
   const todayKey = format(new Date(), "yyyy-MM-dd");
   const { date } = await searchParams;

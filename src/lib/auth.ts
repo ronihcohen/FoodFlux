@@ -35,10 +35,17 @@ export const auth: NextAuthOptions = {
       }
       return session;
     },
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
+    },
   },
   pages: {
     signIn: "/signin",
   },
+  debug: process.env.NODE_ENV === "development",
 };
 
 
