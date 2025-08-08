@@ -18,6 +18,21 @@ const generateSecret = () => {
   return "development-secret";
 };
 
+// Get the correct URL for the environment
+const getBaseUrl = () => {
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+  
+  // Fallback for Vercel deployment
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Development fallback
+  return "http://localhost:3000";
+};
+
 export const auth: NextAuthOptions = {
   secret: generateSecret(),
   adapter: PrismaAdapter(prisma),
