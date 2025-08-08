@@ -1,103 +1,126 @@
-import Image from "next/image";
+import { format } from "date-fns";
+import Link from "next/link";
+import { getServerAuthSession } from "@/lib/server-auth";
+import { prisma } from "@/lib/db";
+import { addEntry, addFoodItem, upsertGlobalDailyGoal, deleteEntry, updateFoodItem, deleteFoodPreset } from "@/app/actions";
+import { redirect } from "next/navigation";
+export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
+  const session = await getServerAuthSession();
+  if (!session?.user?.id) redirect("/signin");
+
+  const todayKey = format(new Date(), "yyyy-MM-dd");
+  const { date } = await searchParams;
+  const dateKey = date ?? todayKey;
+  const prev = format(new Date(new Date(dateKey).getTime() - 24 * 60 * 60 * 1000), "yyyy-MM-dd");
+  const next = format(new Date(new Date(dateKey).getTime() + 24 * 60 * 60 * 1000), "yyyy-MM-dd");
+
+  const [entries, goal, presets] = await Promise.all([
+    prisma.entry.findMany({ where: { userId: session.user.id, dateKey }, orderBy: { createdAt: "asc" } }),
+    prisma.dailyGoal.findUnique({ where: { userId: session.user.id } }),
+    prisma.foodItem.findMany({ where: { userId: session.user.id }, orderBy: { name: "asc" } }),
+  ]);
+
+  const total = entries.reduce((sum, e) => sum + e.calories, 0);
+  const diff = (goal?.goalCalories ?? 0) - total;
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
+      <header className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">FoodFlux</h1>
+        <nav className="flex items-center gap-3 text-sm">
+          <Link href={`/?date=${prev}`} className="underline">Prev</Link>
+          <span>{dateKey}</span>
+          <Link href={`/?date=${next}`} className="underline">Next</Link>
+        </nav>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <section className="space-y-2">
+        <h2 className="font-medium">Daily Goal</h2>
+        <form action={async (fd) => {
+          "use server";
+          const calories = Number(fd.get("goal") ?? 0);
+          await upsertGlobalDailyGoal(calories);
+          const { revalidatePath } = await import("next/cache");
+          revalidatePath(`/?date=${dateKey}`);
+        }} className="flex items-center gap-2">
+          <input name="goal" type="number" defaultValue={goal?.goalCalories ?? 0} className="border rounded px-2 py-1 w-32" />
+          <button type="submit" className="px-3 py-1 rounded bg-black text-white">Save</button>
+        </form>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-medium">Add Entry</h2>
+        <form action={async (fd) => {
+          "use server";
+          const name = String(fd.get("name") ?? "");
+          const calories = Number(fd.get("calories") ?? 0);
+          const foodItemId = String(fd.get("preset") || "");
+          await addEntry(dateKey, name, calories, foodItemId || undefined);
+        }} className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <input name="name" placeholder="Name" className="border rounded px-2 py-1" />
+          <input name="calories" type="number" placeholder="Calories" className="border rounded px-2 py-1" />
+          <select name="preset" className="border rounded px-2 py-1">
+            <option value="">Preset (optional)</option>
+            {presets.map(p => (
+              <option key={p.id} value={p.id}>{p.name} ({p.caloriesPerUnit})</option>
+            ))}
+          </select>
+          <button type="submit" className="px-3 py-1 rounded bg-black text-white">Add</button>
+        </form>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-medium">Entries</h2>
+        <ul className="divide-y">
+          {entries.map(e => (
+            <li key={e.id} className="flex items-center justify-between py-2">
+              <div>
+                <p className="font-medium">{e.name}</p>
+                <p className="text-sm text-gray-500">{e.calories} cal</p>
+              </div>
+              <form action={async () => { "use server"; await deleteEntry(e.id); }}>
+                <button className="text-red-600">Delete</button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-medium">Totals</h2>
+        <p>Total: {total} cal</p>
+        <p>Difference vs goal: {diff} cal</p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-medium">Manage Presets</h2>
+        <form action={addFoodItem} className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input name="name" placeholder="Name" className="border rounded px-2 py-1" />
+          <input name="caloriesPerUnit" type="number" placeholder="Calories" className="border rounded px-2 py-1" />
+          <button type="submit" className="px-3 py-1 rounded bg-black text-white">Add Preset</button>
+        </form>
+        <div className="space-y-2">
+          {presets.map(p => (
+            <div key={p.id} className="flex items-center gap-2 border rounded p-2">
+              <form action={async (fd) => {
+                "use server";
+                const name = String(fd.get("name") ?? "").trim();
+                const caloriesPerUnit = Number(fd.get("caloriesPerUnit") ?? 0);
+                await updateFoodItem(p.id, name, caloriesPerUnit);
+              }} className="flex items-center gap-2 flex-1">
+                <input name="name" defaultValue={p.name} className="border rounded px-2 py-1 w-40" />
+                <input name="caloriesPerUnit" type="number" defaultValue={p.caloriesPerUnit} className="border rounded px-2 py-1 w-28" />
+                <button type="submit" className="px-3 py-1 rounded bg-black text-white">Save</button>
+              </form>
+              <form action={async () => { "use server"; await deleteFoodPreset(p.id); }}>
+                <button className="text-red-600">Delete</button>
+              </form>
+            </div>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
     </div>
   );
 }
