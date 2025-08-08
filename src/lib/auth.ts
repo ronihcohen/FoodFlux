@@ -5,8 +5,23 @@ import { compare } from "bcrypt";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 
+// Generate a fallback secret for production if NEXTAUTH_SECRET is not set
+const generateSecret = () => {
+  if (process.env.NEXTAUTH_SECRET) {
+    return process.env.NEXTAUTH_SECRET;
+  }
+  
+  // Fallback for production - generate a random secret
+  if (process.env.NODE_ENV === "production") {
+    console.warn("NEXTAUTH_SECRET is not set in production. Using fallback secret.");
+    return "fallback-secret-for-production-change-this";
+  }
+  
+  return "development-secret";
+};
+
 export const auth: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: generateSecret(),
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   providers: [

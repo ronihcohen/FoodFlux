@@ -54,6 +54,20 @@ NEXTAUTH_SECRET=your-secret-key-here
 NEXTAUTH_URL=https://your-domain.vercel.app
 ```
 
+### Generate a Secure NEXTAUTH_SECRET
+
+If you don't have a secret yet, generate one using the provided script:
+
+```bash
+# Navigate to your project directory
+cd web
+
+# Generate a secure secret
+node scripts/generate-secret.js
+```
+
+Copy the generated secret and add it to your Vercel environment variables.
+
 ### Optional OAuth Variables (if using social login)
 ```
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -89,17 +103,25 @@ npx prisma db push --schema=./prisma/schema.prisma
 
 ### Common Issues
 
-1. **Database Connection Errors**
+1. **NextAuth Secret Error (`NO_SECRET`)**
+   - **Error**: `Please define a secret in production`
+   - **Solution**: 
+     - Generate a secure secret: `node scripts/generate-secret.js`
+     - Add `NEXTAUTH_SECRET` to Vercel environment variables
+     - Redeploy your application
+   - **Prevention**: Always set environment variables before deployment
+
+2. **Database Connection Errors**
    - Verify your `DATABASE_URL` is correct
    - Ensure your database is accessible from Vercel's servers
    - Check if your database requires SSL connections
 
-2. **Build Failures**
+3. **Build Failures**
    - Check that all dependencies are in `package.json`
    - Verify that `prisma generate` runs successfully
    - Ensure TypeScript compilation passes
 
-3. **Authentication Issues**
+4. **Authentication Issues**
    - Verify `NEXTAUTH_SECRET` is set
    - Check that `NEXTAUTH_URL` matches your deployment URL
    - Ensure OAuth provider credentials are correct
