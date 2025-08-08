@@ -94,7 +94,7 @@ A modern, full-stack calorie tracking application built with Next.js 14, TypeScr
 ## 🚀 Usage
 
 ### Getting Started
-1. **Sign Up/Login**: Create an account or sign in with your credentials
+1. **Sign In**: Sign in with your Google account
 2. **Set Daily Goal**: Configure your daily calorie target
 3. **Add Food Presets**: Create frequently used food items for quick entry
 4. **Track Daily Intake**: Add food entries for each day
@@ -155,6 +155,8 @@ npx prisma studio
 DATABASE_URL="your-production-database-url"
 NEXTAUTH_SECRET="your-production-secret"
 NEXTAUTH_URL="https://your-domain.com"
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
 ```
 
 ## 🔮 Future Enhancements

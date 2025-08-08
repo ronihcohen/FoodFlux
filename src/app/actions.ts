@@ -1,7 +1,6 @@
 "use server";
 import { prisma } from "@/lib/db";
 import { getServerAuthSession } from "@/lib/server-auth";
-import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
 export async function requireUserId() {
@@ -12,23 +11,24 @@ export async function requireUserId() {
 
 export async function addFoodItem(formData: FormData) {
   const userId = await requireUserId();
-  const name = String(formData.get("name") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
   const caloriesPerUnit = Number(formData.get("caloriesPerUnit") ?? "0");
-  const schema = z.object({ name: z.string().min(1), caloriesPerUnit: z.number().int().min(0) });
-  const parsed = schema.safeParse({ name, caloriesPerUnit });
-  if (!parsed.success) throw new Error("Invalid input");
-  await prisma.foodItem.create({ data: { userId, ...parsed.data } });
+  
+  if (!name || caloriesPerUnit < 0) throw new Error("Invalid input");
+  
+  await prisma.foodItem.create({ data: { userId, name, caloriesPerUnit } });
   revalidatePath("/");
 }
 
 export async function upsertGlobalDailyGoal(goalCalories: number) {
   const userId = await requireUserId();
-  const schema = z.object({ goalCalories: z.number().int().min(0) });
-  const parsed = schema.parse({ goalCalories });
+  
+  if (goalCalories < 0) throw new Error("Goal calories must be non-negative");
+  
   await prisma.dailyGoal.upsert({
     where: { userId },
-    update: { goalCalories: parsed.goalCalories },
-    create: { userId, goalCalories: parsed.goalCalories },
+    update: { goalCalories },
+    create: { userId, goalCalories },
   });
 }
 
@@ -52,20 +52,22 @@ export async function addEntry(dateKey: string, name: string, calories: number, 
     throw new Error("Food name is required. Please enter a name or select a preset.");
   }
 
-  const schema = z.object({
-    dateKey: z.string().min(8).max(10),
-    name: z.string().min(1),
-    calories: z.number().int().min(0),
-    foodItemId: z.string().optional(),
-  });
-
-  const parsed = schema.parse({ dateKey, name: workingName, calories: workingCalories, foodItemId });
+  // Validate inputs
+  if (!dateKey || dateKey.length < 8 || dateKey.length > 10) {
+    throw new Error("Invalid date key");
+  }
+  if (!workingName) {
+    throw new Error("Food name is required");
+  }
+  if (workingCalories < 0) {
+    throw new Error("Calories must be non-negative");
+  }
 
   await prisma.entry.create({
-    data: { userId, ...parsed },
+    data: { userId, dateKey, name: workingName, calories: workingCalories, foodItemId },
   });
 
-  revalidatePath(`/?date=${parsed.dateKey}`);
+  revalidatePath(`/?date=${dateKey}`);
 }
 
 export async function deleteEntry(entryId: string) {
@@ -78,21 +80,30 @@ export async function deleteEntry(entryId: string) {
 
 export async function updateFoodItem(foodItemId: string, name: string, caloriesPerUnit: number) {
   const userId = await requireUserId();
-  const schema = z.object({ id: z.string().min(1), name: z.string().min(1), caloriesPerUnit: z.number().int().min(0) });
-  const parsed = schema.parse({ id: foodItemId, name, caloriesPerUnit });
-  const existing = await prisma.foodItem.findUnique({ where: { id: parsed.id } });
+  
+  if (!foodItemId || !name.trim() || caloriesPerUnit < 0) {
+    throw new Error("Invalid input");
+  }
+  
+  const existing = await prisma.foodItem.findUnique({ where: { id: foodItemId } });
   if (!existing || existing.userId !== userId) throw new Error("Not found");
-  await prisma.foodItem.update({ where: { id: parsed.id }, data: { name: parsed.name, caloriesPerUnit: parsed.caloriesPerUnit } });
+  await prisma.foodItem.update({ 
+    where: { id: foodItemId }, 
+    data: { name: name.trim(), caloriesPerUnit } 
+  });
   revalidatePath("/");
 }
 
 export async function deleteFoodPreset(foodItemId: string) {
   const userId = await requireUserId();
-  const schema = z.object({ id: z.string().min(1) });
-  const { id } = schema.parse({ id: foodItemId });
-  const existing = await prisma.foodItem.findUnique({ where: { id } });
+  
+  if (!foodItemId) {
+    throw new Error("Invalid food item ID");
+  }
+  
+  const existing = await prisma.foodItem.findUnique({ where: { id: foodItemId } });
   if (!existing || existing.userId !== userId) throw new Error("Not found");
-  await prisma.foodItem.delete({ where: { id } });
+  await prisma.foodItem.delete({ where: { id: foodItemId } });
   revalidatePath("/");
 }
 
