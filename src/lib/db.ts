@@ -1,4 +1,4 @@
-import { PrismaClient } from "@/generated/prisma";
+import { PrismaClient } from "@prisma/client";
 
 // Ensure DATABASE_URL is set for Prisma at runtime, mapping from common envs used on Vercel
 // Prefer DATABASE_URL; otherwise fall back to PRISMA_DATABASE_URL or POSTGRES_URL
