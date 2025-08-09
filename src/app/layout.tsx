@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getServerAuthSession } from "@/lib/server-auth";
+import SignOutButton from "@/components/SignOutButton";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,11 +19,12 @@ export const metadata: Metadata = {
   description: "Calories tracker",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerAuthSession();
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
@@ -33,6 +36,31 @@ export default function RootLayout({
                 <h1 className="text-lg font-semibold tracking-tight">FoodFlux</h1>
                 <p className="text-xs text-neutral-500">Track your calories with ease</p>
               </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {session?.user ? (
+                <>
+                  {session.user.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={session.user.image}
+                      alt={session.user.name ?? session.user.email ?? "User"}
+                      className="h-8 w-8 rounded-full"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-neutral-200 grid place-items-center text-xs font-medium">
+                      {(session.user.name ?? session.user.email ?? "?")
+                        .slice(0, 1)
+                        .toUpperCase()}
+                    </div>
+                  )}
+                  <div className="text-sm">
+                    <div className="font-medium leading-none">{session.user.name ?? "User"}</div>
+                    <div className="text-neutral-500 leading-none">{session.user.email}</div>
+                  </div>
+                  <SignOutButton className="btn-ghost" />
+                </>
+              ) : null}
             </div>
           </header>
           <main>{children}</main>
