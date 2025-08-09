@@ -50,6 +50,9 @@ In your Vercel project dashboard, go to Settings → Environment Variables and a
 ### Required Variables
 ```
 DATABASE_URL=postgresql://username:password@host:port/database
+# Optional fallbacks supported by the app:
+PRISMA_DATABASE_URL=postgresql://username:password@host:port/database
+POSTGRES_URL=postgresql://username:password@host:port/database
 NEXTAUTH_SECRET=your-secret-key-here
 NEXTAUTH_URL=https://your-domain.vercel.app
 ```
@@ -68,12 +71,10 @@ node scripts/generate-secret.js
 
 Copy the generated secret and add it to your Vercel environment variables.
 
-### Optional OAuth Variables (if using social login)
+### OAuth Variables (Google OAuth only)
 ```
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GITHUB_ID=your-github-client-id
-GITHUB_SECRET=your-github-client-secret
 ```
 
 ## Step 4: Database Migration

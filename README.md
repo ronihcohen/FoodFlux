@@ -23,7 +23,7 @@ A modern, full-stack calorie tracking application built with Next.js 14, TypeScr
 - **Preset Management**: Edit and delete preset food items as needed
 
 ### 🔐 Authentication & Security
-- **Secure Authentication**: NextAuth.js with multiple providers
+- **Secure Authentication**: NextAuth.js with Google OAuth only
 - **User Sessions**: Robust session management and protection
 - **Data Isolation**: Complete user data separation and security
 - **Form Validation**: Real-time validation and error handling
@@ -32,7 +32,7 @@ A modern, full-stack calorie tracking application built with Next.js 14, TypeScr
 
 - **Frontend**: Next.js 14 with TypeScript and Tailwind CSS
 - **Backend**: Next.js App Router with Server Actions
-- **Database**: SQLite with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: NextAuth.js
 - **Styling**: Tailwind CSS with custom design system
 - **Deployment**: Vercel-ready configuration
@@ -55,11 +55,16 @@ A modern, full-stack calorie tracking application built with Next.js 14, TypeScr
    cp .env.example .env.local
    ```
    
-   Configure the following variables in `.env.local`:
+    Configure the following variables in `.env.local` (PostgreSQL in all envs, Google OAuth only):
    ```env
-   DATABASE_URL="file:./dev.db"
-   NEXTAUTH_SECRET="your-secret-key"
-   NEXTAUTH_URL="http://localhost:3000"
+    # Prefer `DATABASE_URL`. If not set, the app will use `PRISMA_DATABASE_URL` or `POSTGRES_URL`.
+    DATABASE_URL="postgresql://username:password@host:port/database"
+    PRISMA_DATABASE_URL=""
+    POSTGRES_URL=""
+    NEXTAUTH_SECRET="your-secret-key"
+    NEXTAUTH_URL="http://localhost:3000"
+    GOOGLE_CLIENT_ID="your-google-client-id"
+    GOOGLE_CLIENT_SECRET="your-google-client-secret"
    ```
 
 4. **Set up the database**
@@ -150,9 +155,11 @@ npx prisma studio
 2. Configure environment variables in Vercel dashboard
 3. Deploy automatically on push to main branch
 
-### Environment Variables for Production
+### Environment Variables for Production (Vercel)
 ```env
 DATABASE_URL="your-production-database-url"
+PRISMA_DATABASE_URL="your-production-database-url" # optional fallback
+POSTGRES_URL="your-production-database-url" # optional fallback
 NEXTAUTH_SECRET="your-production-secret"
 NEXTAUTH_URL="https://your-domain.com"
 GOOGLE_CLIENT_ID="your-google-client-id"

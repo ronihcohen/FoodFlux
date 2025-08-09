@@ -85,7 +85,7 @@ model FoodItem {
 model Entry {
   id         String   @id @default(cuid())
   userId     String
-  // ISO date key YYYY-MM-DD to avoid timezone issues with SQLite
+  // ISO date key YYYY-MM-DD to avoid timezone issues across environments
   dateKey    String
   name       String
   calories   Int

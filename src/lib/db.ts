@@ -1,5 +1,18 @@
 import { PrismaClient } from "@/generated/prisma";
 
+// Ensure DATABASE_URL is set for Prisma at runtime, mapping from common envs used on Vercel
+// Prefer DATABASE_URL; otherwise fall back to PRISMA_DATABASE_URL or POSTGRES_URL
+if (!process.env.DATABASE_URL) {
+  const fallbackDatabaseUrl =
+    process.env.PRISMA_DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    undefined;
+
+  if (fallbackDatabaseUrl) {
+    process.env.DATABASE_URL = fallbackDatabaseUrl;
+  }
+}
+
 declare global {
   var prismaGlobal: PrismaClient | undefined;
 }
