@@ -127,8 +127,14 @@ export default async function Home({
                     } else {
                       entryCalories = calories * quantity;
                     }
-                    if (quantity > 1) {
+                    if (quantity > 1 && name) {
                       entryName = `${name} (${quantity})`;
+                    } else if (quantity > 1 && foodItemId) {
+                      // If using preset and name is empty, use preset name
+                      const preset = presets.find((p) => p.id === foodItemId);
+                      entryName = preset
+                        ? `${preset.name} (${quantity})`
+                        : `(${quantity})`;
                     }
 
                     await addEntry(
