@@ -110,6 +110,7 @@ export default async function Home({
                   const name = String(fd.get("name") ?? "").trim();
                   const calories = Number(fd.get("calories") ?? 0);
                   const foodItemId = String(fd.get("preset") || "");
+                  const quantity = Number(fd.get("quantity") ?? 1);
 
                   // Don't submit if name is empty and no preset is selected
                   if (!name && !foodItemId) {
@@ -117,10 +118,19 @@ export default async function Home({
                   }
 
                   try {
+                    // Calculate total calories based on quantity
+                    let entryCalories = calories;
+                    if (foodItemId) {
+                      const preset = presets.find((p) => p.id === foodItemId);
+                      entryCalories = (preset?.caloriesPerUnit ?? 0) * quantity;
+                    } else {
+                      entryCalories = calories * quantity;
+                    }
+
                     await addEntry(
                       dateKey,
                       name,
-                      calories,
+                      entryCalories,
                       foodItemId || undefined
                     );
 
@@ -142,7 +152,7 @@ export default async function Home({
                     console.error("Failed to add entry:", error);
                   }
                 }}
-                className="grid grid-cols-1 sm:grid-cols-4 gap-2"
+                className="grid grid-cols-1 sm:grid-cols-5 gap-2"
               >
                 <input
                   name="name"
@@ -163,6 +173,14 @@ export default async function Home({
                     </option>
                   ))}
                 </select>
+                <input
+                  name="quantity"
+                  type="number"
+                  min={1}
+                  defaultValue={1}
+                  className="input"
+                  placeholder="Qty"
+                />
                 <button type="submit" className="btn-primary">
                   Add
                 </button>
