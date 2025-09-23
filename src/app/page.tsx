@@ -120,16 +120,20 @@ export default async function Home({
                   try {
                     // Calculate total calories based on quantity
                     let entryCalories = calories;
+                    let entryName = name;
                     if (foodItemId) {
                       const preset = presets.find((p) => p.id === foodItemId);
                       entryCalories = (preset?.caloriesPerUnit ?? 0) * quantity;
                     } else {
                       entryCalories = calories * quantity;
                     }
+                    if (quantity > 1) {
+                      entryName = `${name} (${quantity})`;
+                    }
 
                     await addEntry(
                       dateKey,
-                      name,
+                      entryName,
                       entryCalories,
                       foodItemId || undefined
                     );
