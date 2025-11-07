@@ -1,3 +1,4 @@
+import RegisterSW from "@/components/RegisterSW";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { getServerAuthSession } from "@/lib/server-auth";
@@ -17,6 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FoodFlux",
   description: "Calories tracker",
+  manifest: "/manifest.json",
 };
 
 export default async function RootLayout({
@@ -27,7 +29,12 @@ export default async function RootLayout({
   const session = await getServerAuthSession();
   return (
     <html lang="en">
+      <head>
+        <meta name="theme-color" content="#0ea5a4" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
+        <RegisterSW />
         <div className="container-shell space-y-6">
           <header className="flex flex-wrap items-center justify-between gap-3 pt-4">
             <div className="flex items-center gap-3 min-w-0">
