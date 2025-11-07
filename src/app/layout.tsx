@@ -30,7 +30,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="theme-color" content="#0ea5a4" />
+        <meta name="theme-color" content="#000000" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
