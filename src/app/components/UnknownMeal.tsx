@@ -34,7 +34,7 @@ export default function UnknownMeal({ dateKey }: { dateKey: string }) {
       <div className="flex items-center justify-between mb-2">
         <div>
           <h3 className="font-medium">Quick Add: Unknown Meal</h3>
-          <p className="text-sm text-neutral-500">Doesn't save to presets</p>
+          <p className="text-sm text-neutral-500">Doesn&apos;t save to presets</p>
         </div>
         <div className="text-sm text-neutral-700">Min 50 cal</div>
       </div>

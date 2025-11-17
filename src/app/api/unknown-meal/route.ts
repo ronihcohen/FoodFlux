@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   let body: { dateKey?: string; calories?: number } = {};
   try {
     body = await req.json();
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
