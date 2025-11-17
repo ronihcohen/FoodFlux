@@ -48,7 +48,19 @@ export default function UnknownMeal({ dateKey }: { dateKey: string }) {
         >
           -
         </button>
-        <div className="flex-1 text-center font-medium">{calories} cal</div>
+
+        <input
+          type="number"
+          min={50}
+          value={calories}
+          onChange={(e) => {
+            const v = Number(e.target.value ?? 50);
+            setCalories(Number.isNaN(v) ? 50 : Math.max(50, Math.round(v)));
+          }}
+          className="input text-center w-28"
+          aria-label="Calories"
+        />
+
         <button
           type="button"
           onClick={inc}
@@ -57,6 +69,7 @@ export default function UnknownMeal({ dateKey }: { dateKey: string }) {
         >
           +
         </button>
+
         <button onClick={addUnknown} className="btn-primary">
           Add
         </button>
