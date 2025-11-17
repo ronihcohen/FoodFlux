@@ -63,6 +63,24 @@ export default async function Home({
     <div className="mx-auto px-4 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card md:col-span-2">
+          <div className="card-body flex items-center justify-between">
+            <div>
+              <div className="section-title">Daily Summary</div>
+              <div className="text-sm text-neutral-500">Difference vs goal</div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-semibold">{total} cal</div>
+              <div
+                className={`text-sm ${diff >= 0 ? "text-emerald-600" : "text-red-600"
+                  }`}
+              >
+                {diff} cal
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="card md:col-span-2">
+
           <div className="card-body">
             <div className="flex items-center justify-between mb-3">
               <span className="section-title">Day</span>
@@ -258,7 +276,7 @@ export default async function Home({
               </button>
             </form>
             <div className="space-y-2">
-                  {presets.map((p) => (
+              {presets.map((p) => (
                 <div key={p.id} className="flex items-center gap-2">
                   <form
                     action={async (fd) => {
@@ -301,24 +319,7 @@ export default async function Home({
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-body flex items-center justify-between">
-          <div>
-            <div className="section-title">Daily Summary</div>
-            <div className="text-sm text-neutral-500">Difference vs goal</div>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-semibold">{total} cal</div>
-            <div
-              className={`text-sm ${
-                diff >= 0 ? "text-emerald-600" : "text-red-600"
-              }`}
-            >
-              {diff} cal
-            </div>
-          </div>
-        </div>
-      </div>
+
       <div className="mt-4">
         <RandomYesNo />
       </div>
