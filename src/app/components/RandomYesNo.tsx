@@ -8,16 +8,25 @@ export default function RandomYesNo() {
 
   // simple transient highlight flag when asking
   const [flash, setFlash] = useState(false);
+  const [flashType, setFlashType] = useState<"changed" | "unchanged" | "first" | null>(null);
 
   function ask() {
     const next = Math.random() < 0.5 ? "Yes" : "No";
     setPrev(result);
     setResult(next);
-    setChanged(result === null ? null : next !== result);
+    const isChanged = result === null ? null : next !== result;
+    setChanged(isChanged);
+
+    // set flash type for color feedback
+    if (result === null) setFlashType("first");
+    else setFlashType(isChanged ? "changed" : "unchanged");
 
     // trigger a brief flash so the user knows a new draw happened
     setFlash(true);
-    window.setTimeout(() => setFlash(false), 400);
+    window.setTimeout(() => {
+      setFlash(false);
+      setFlashType(null);
+    }, 2500);
   }
 
   return (
@@ -27,23 +36,21 @@ export default function RandomYesNo() {
           <h3 className="font-medium">Decide</h3>
         </div>
         <div className="flex items-center gap-3">
-          <div
-            className={`text-xl font-semibold transition-opacity duration-200 ${
-              flash ? "opacity-80" : "opacity-100"
-            }`}
-          >
-            {result ?? "-"}
-          </div>
-          <div className="text-sm text-neutral-500 text-right">
-            <div>Prev: {prev ?? "-"}</div>
-            <div>
-              {changed === null ? (
-                ""
-              ) : changed ? (
-                <span className="text-emerald-600">Changed</span>
-              ) : (
-                <span className="text-red-600">Unchanged</span>
-              )}
+          <div className="flex flex-col items-end">
+            <div
+              role="status"
+              aria-live="polite"
+              className={`text-xl font-semibold px-3 py-1 rounded-md transition-transform duration-300 inline-block transform ${
+                flash
+                  ? flashType === "changed"
+                    ? "bg-emerald-100 text-emerald-800 scale-110 shadow-lg"
+                    : flashType === "unchanged"
+                    ? "bg-red-100 text-red-800 scale-110 shadow-lg"
+                    : "bg-neutral-100 text-neutral-900 scale-105 shadow-md"
+                  : "bg-transparent text-neutral-900"
+              }`}
+            >
+              {result ?? "-"}
             </div>
           </div>
           <button onClick={ask} className="btn-primary">
