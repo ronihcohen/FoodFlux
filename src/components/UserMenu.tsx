@@ -98,13 +98,99 @@ export default function UserMenu({ user }: UserMenuProps) {
             </div>
           </div>
           <div className="h-px bg-black/5 dark:bg-white/10" />
-          <div className="p-2">
+          <div className="p-2 space-y-2">
+            <WidgetTokenManager />
             <SignOutButton className="btn-ghost w-full justify-start text-red-600" title="Logout">
               Logout
             </SignOutButton>
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function WidgetTokenManager() {
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/widget/token');
+      if (!res.ok) throw new Error('Failed to load token');
+      const data = await res.json();
+      setToken(data.token ?? null);
+    } catch (err: any) {
+      setError(err?.message ?? 'Error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function generate() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/widget/token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'generate' }) });
+      if (!res.ok) throw new Error('Failed to generate token');
+      const data = await res.json();
+      setToken(data.token ?? null);
+    } catch (err: any) {
+      setError(err?.message ?? 'Error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function revoke() {
+    if (!confirm('Revoke widget token? This will stop any widgets using it.')) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/widget/token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'revoke' }) });
+      if (!res.ok) throw new Error('Failed to revoke token');
+      const data = await res.json();
+      if (data.revoked) setToken(null);
+    } catch (err: any) {
+      setError(err?.message ?? 'Error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function copy() {
+    if (!token) return;
+    navigator.clipboard.writeText(token);
+    alert('Token copied to clipboard');
+  }
+
+  // Load token when component mounts
+  useEffect(() => {
+    load();
+  }, []);
+
+  return (
+    <div className="space-y-2">
+      <div className="text-xs text-neutral-500">Widget token</div>
+      {loading ? (
+        <div className="text-sm">Loading…</div>
+      ) : error ? (
+        <div className="text-sm text-red-600">{error}</div>
+      ) : token ? (
+        <div className="flex items-center gap-2">
+          <div className="flex-1 truncate text-sm font-mono">{token.slice(0, 8)}…{token.slice(-8)}</div>
+          <button onClick={copy} className="btn-ghost">Copy</button>
+          <button onClick={revoke} className="btn-danger">Revoke</button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <div className="text-sm text-neutral-500">No token</div>
+          <button onClick={generate} className="btn-primary">Generate</button>
+        </div>
+      )}
     </div>
   );
 }

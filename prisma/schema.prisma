@@ -18,6 +18,9 @@ model User {
   emailVerified DateTime?
   image         String?
 
+  // Optional token for API widget access (short, revocable)
+  widgetToken   String?   @unique
+
   accounts      Account[]
   sessions      Session[]
 
