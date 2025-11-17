@@ -121,10 +121,10 @@ function WidgetTokenManager() {
     try {
       const res = await fetch('/api/widget/token');
       if (!res.ok) throw new Error('Failed to load token');
-      const data = await res.json();
+      const data = await res.json() as { token: string | null };
       setToken(data.token ?? null);
-    } catch (err: any) {
-      setError(err?.message ?? 'Error');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error');
     } finally {
       setLoading(false);
     }
@@ -136,10 +136,10 @@ function WidgetTokenManager() {
     try {
       const res = await fetch('/api/widget/token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'generate' }) });
       if (!res.ok) throw new Error('Failed to generate token');
-      const data = await res.json();
+      const data = await res.json() as { token: string };
       setToken(data.token ?? null);
-    } catch (err: any) {
-      setError(err?.message ?? 'Error');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error');
     } finally {
       setLoading(false);
     }
@@ -152,10 +152,10 @@ function WidgetTokenManager() {
     try {
       const res = await fetch('/api/widget/token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'revoke' }) });
       if (!res.ok) throw new Error('Failed to revoke token');
-      const data = await res.json();
+      const data = await res.json() as { revoked: boolean };
       if (data.revoked) setToken(null);
-    } catch (err: any) {
-      setError(err?.message ?? 'Error');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error');
     } finally {
       setLoading(false);
     }

@@ -3,8 +3,6 @@ import { useState } from "react";
 
 export default function RandomYesNo() {
   const [result, setResult] = useState<string | null>(null);
-  const [prev, setPrev] = useState<string | null>(null);
-  const [changed, setChanged] = useState<boolean | null>(null);
 
   // simple transient highlight flag when asking
   const [flash, setFlash] = useState(false);
@@ -12,14 +10,11 @@ export default function RandomYesNo() {
 
   function ask() {
     const next = Math.random() < 0.5 ? "Yes" : "No";
-    setPrev(result);
     setResult(next);
-    const isChanged = result === null ? null : next !== result;
-    setChanged(isChanged);
 
     // set flash type for color feedback
     if (result === null) setFlashType("first");
-    else setFlashType(isChanged ? "changed" : "unchanged");
+    else setFlashType(next !== result ? "changed" : "unchanged");
 
     // trigger a brief flash so the user knows a new draw happened
     setFlash(true);
