@@ -10,6 +10,7 @@ import {
   updateFoodItem,
   deleteFoodPreset,
 } from "@/app/actions";
+import UnknownMeal from "./components/UnknownMeal";
 import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
@@ -195,6 +196,10 @@ export default async function Home({
                   Add
                 </button>
               </form>
+            </section>
+
+            <section className="space-y-2 mt-4">
+              <UnknownMeal dateKey={dateKey} />
             </section>
 
             <section className="space-y-2 mt-4">

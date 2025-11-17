@@ -9,10 +9,9 @@ const generateSecret = () => {
     return process.env.NEXTAUTH_SECRET;
   }
   
-  // Fallback for production - generate a random secret
+  // Fallback for production - require secret to be set
   if (process.env.NODE_ENV === "production") {
-    console.warn("NEXTAUTH_SECRET is not set in production. Using fallback secret.");
-    return "fallback-secret-for-production-change-this";
+    throw new Error("NEXTAUTH_SECRET must be set in production environment variables");
   }
   
   return "development-secret";
@@ -37,6 +36,7 @@ export const auth: NextAuthOptions = {
   secret: generateSecret(),
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -44,6 +44,12 @@ export const auth: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Ensure we redirect to a safe URL
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (url.startsWith(baseUrl)) return url;
+      return baseUrl;
+    },
     session: async ({ session, token }) => {
       if (token?.sub && session.user) {
         session.user.id = token.sub;
