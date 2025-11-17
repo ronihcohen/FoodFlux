@@ -21,7 +21,7 @@ export const auth: NextAuthOptions = {
   secret: generateSecret(),
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
-  trustHost: true,
+  useSecureCookies: process.env.NODE_ENV === "production",
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
