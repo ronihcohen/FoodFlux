@@ -11,6 +11,7 @@ import {
   deleteFoodPreset,
 } from "@/app/actions";
 import UnknownMeal from "./components/UnknownMeal";
+import RandomYesNo from "./components/RandomYesNo";
 import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
@@ -59,7 +60,7 @@ export default async function Home({
   const diff = (goal?.goalCalories ?? 0) - total;
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-[420px] mx-auto px-4 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card md:col-span-2">
           <div className="card-body">
@@ -257,7 +258,7 @@ export default async function Home({
               </button>
             </form>
             <div className="space-y-2">
-              {presets.map((p) => (
+                  {presets.map((p) => (
                 <div key={p.id} className="flex items-center gap-2">
                   <form
                     action={async (fd) => {
@@ -273,13 +274,13 @@ export default async function Home({
                     <input
                       name="name"
                       defaultValue={p.name}
-                      className="input w-40"
+                      className="input w-full sm:w-40"
                     />
                     <input
                       name="caloriesPerUnit"
                       type="number"
                       defaultValue={p.caloriesPerUnit}
-                      className="input w-28"
+                      className="input w-full sm:w-28"
                     />
                     <button type="submit" className="btn-ghost">
                       Save
@@ -317,6 +318,9 @@ export default async function Home({
             </div>
           </div>
         </div>
+      </div>
+      <div className="mt-4">
+        <RandomYesNo />
       </div>
     </div>
   );
