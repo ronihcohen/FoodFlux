@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["avatars.githubusercontent.com", "lh3.googleusercontent.com"],
   },
+  turbopack: {
+    rules: {
+      // Add custom file loaders here
+      // '*.svg': {
+      //   loaders: ['@svgr/webpack'],
+      //   as: '*.js',
+      // },
+    },
+  },
 };
 
 export default pwaConfig(nextConfig);
