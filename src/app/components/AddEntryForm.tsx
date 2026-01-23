@@ -98,7 +98,10 @@ export default function AddEntryForm({ dateKey, presets }: AddEntryFormProps) {
                 if (!exists) {
                     const fd = new FormData();
                     fd.set("name", submittedName);
-                    fd.set("caloriesPerUnit", String(effectiveCalories));
+                    // If in weight mode, the preset should store the total calculated calories, so it acts like a fixed portion item next time.
+                    // If in quantity mode, it stores the per-unit calories.
+                    const caloriesToSave = inputMode === "weight" ? finalCalories : effectiveCalories;
+                    fd.set("caloriesPerUnit", String(caloriesToSave));
                     await addFoodItem(fd);
                 }
             }
