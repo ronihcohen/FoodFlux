@@ -3,7 +3,6 @@ import Link from "next/link";
 import { getServerAuthSession } from "@/lib/server-auth";
 import { prisma } from "@/lib/db";
 import {
-  addEntry,
   addFoodItem,
   upsertGlobalDailyGoal,
   deleteEntry,
@@ -12,6 +11,7 @@ import {
 } from "@/app/actions";
 import UnknownMeal from "./components/UnknownMeal";
 import RandomYesNo from "./components/RandomYesNo";
+import AddEntryForm from "./components/AddEntryForm";
 import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
@@ -122,100 +122,7 @@ export default async function Home({
               </form>
             </section>
 
-            <section className="space-y-2 mt-4">
-              <h2 className="font-medium">Add Entry</h2>
-              <form
-                action={async (fd) => {
-                  "use server";
-                  const name = String(fd.get("name") ?? "").trim();
-                  const calories = Number(fd.get("calories") ?? 0);
-                  const foodItemId = String(fd.get("preset") || "");
-                  const quantity = Number(fd.get("quantity") ?? 1);
-
-                  // Don't submit if name is empty and no preset is selected
-                  if (!name && !foodItemId) {
-                    return; // Silently ignore invalid submission
-                  }
-
-                  try {
-                    // Calculate total calories based on quantity
-                    let entryCalories = calories;
-                    let entryName = name;
-                    if (foodItemId) {
-                      const preset = presets.find((p) => p.id === foodItemId);
-                      entryCalories = (preset?.caloriesPerUnit ?? 0) * quantity;
-                    } else {
-                      entryCalories = calories * quantity;
-                    }
-                    if (quantity > 1 && name) {
-                      entryName = `${name} (${quantity})`;
-                    } else if (quantity > 1 && foodItemId) {
-                      // If using preset and name is empty, use preset name
-                      const preset = presets.find((p) => p.id === foodItemId);
-                      entryName = preset
-                        ? `${preset.name} (${quantity})`
-                        : `(${quantity})`;
-                    }
-
-                    await addEntry(
-                      dateKey,
-                      entryName,
-                      entryCalories,
-                      foodItemId || undefined
-                    );
-
-                    // If entry is added by name and not from preset, check if preset exists
-                    if (name && !foodItemId) {
-                      // Case-insensitive check for existing preset
-                      const exists = presets.some(
-                        (p) => p.name.toLowerCase() === name.toLowerCase()
-                      );
-                      if (!exists) {
-                        const fdPreset = new FormData();
-                        fdPreset.set("name", name);
-                        fdPreset.set("caloriesPerUnit", String(calories));
-                        await addFoodItem(fdPreset);
-                      }
-                    }
-                  } catch (error) {
-                    // Handle validation errors gracefully
-                    console.error("Failed to add entry:", error);
-                  }
-                }}
-                className="grid grid-cols-1 sm:grid-cols-5 gap-2"
-              >
-                <input
-                  name="name"
-                  placeholder="Food name (or select preset)"
-                  className="input"
-                />
-                <input
-                  name="calories"
-                  type="number"
-                  placeholder="Calories"
-                  className="input"
-                />
-                <select name="preset" className="select">
-                  <option value="">Select preset (optional)</option>
-                  {presets.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.caloriesPerUnit})
-                    </option>
-                  ))}
-                </select>
-                <input
-                  name="quantity"
-                  type="number"
-                  min={1}
-                  defaultValue={1}
-                  className="input"
-                  placeholder="Qty"
-                />
-                <button type="submit" className="btn-primary">
-                  Add
-                </button>
-              </form>
-            </section>
+            <AddEntryForm dateKey={dateKey} presets={presets} />
 
             <section className="space-y-2 mt-4">
               <UnknownMeal dateKey={dateKey} />
