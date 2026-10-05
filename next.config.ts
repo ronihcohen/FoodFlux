@@ -7,6 +7,7 @@ const pwaConfig = withPWA({
 });
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   serverExternalPackages: ["@prisma/client"],
   images: {
     domains: ["avatars.githubusercontent.com", "lh3.googleusercontent.com"],
